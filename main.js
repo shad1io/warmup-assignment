@@ -72,6 +72,19 @@ function getActiveTime(shiftDuration, idleTime) {
 // ============================================================
 function metQuota(date, activeTime) {
     // TODO: Implement this function
+    let [y,m,d] = date.split("-").map(Number);
+
+    let active = activeTime.split(":").reduce((a,b,i)=>a + b*[3600,60,1][i],0);
+
+    let quota;
+
+    if(m === 4 && d >= 10 && d <= 30){
+        quota = 6*3600;
+    }else{
+        quota = 8*3600 + 24*60;
+    }
+
+    return active >= quota;
 }
 
 // ============================================================
@@ -82,6 +95,7 @@ function metQuota(date, activeTime) {
 // ============================================================
 function addShiftRecord(textFile, shiftObj) {
     // TODO: Implement this function
+    
 }
 
 // ============================================================

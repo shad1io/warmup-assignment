@@ -158,7 +158,7 @@ function setBonus(textFile, driverID, date, newValue) {
             break;
         }
     }
-    fs.writeFileSync(textFile, rows.join("\n"));x
+    fs.writeFileSync(textFile, rows.join("\n"));
 }
 
 // ============================================================

@@ -60,6 +60,8 @@ function getIdleTime(startTime, endTime) {
 // ============================================================
 function getActiveTime(shiftDuration, idleTime) {
     // TODO: Implement this function
+    let active = timeToSeconds(shiftDuration) - timeToSeconds(idleTime);
+    return secondsToTime(active);
 }
 
 // ============================================================

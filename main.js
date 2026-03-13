@@ -305,43 +305,51 @@ return secondsToTime(required);
 // ============================================================
 function getNetPay(driverID, actualHours, requiredHours, rateFile) {
     // TODO: Implement this function
-    const fs = require("fs");
+const fs = require("fs");
 
 let rows = fs.readFileSync(rateFile,"utf8").trim().split("\n");
 
 let basePay;
 let tier;
 
-for(let i=1;i<rows.length;i++){
+for(let row of rows){
 
-    let cols = rows[i].split(",");
+    let cols = row.split(",");
 
-    if(cols[0] === driverID){
-
+    if(cols[0].trim() === driverID){
         basePay = parseInt(cols[2]);
         tier = parseInt(cols[3]);
-
+        break;
     }
-
 }
 
-let missing = timeToSeconds(requiredHours) - timeToSeconds(actualHours);
+
+function toHours(time){
+    let [h,m,s] = time.split(":").map(Number);
+    return h + m/60 + s/3600;
+}
+
+let actual = toHours(actualHours);
+let required = toHours(requiredHours);
+
+
+if(actual >= required) return basePay;
+
+let missing = required - actual;
+
+let allowed = {1:50,2:20,3:10,4:3};
+
+missing -= allowed[tier];
+
 
 if(missing <= 0) return basePay;
 
-let allowance = [0,50,20,10,3][tier] * 3600;
 
-missing -= allowance;
+let billableHours = Math.floor(missing);
 
-if(missing < 0) missing = 0;
+let deductionRate = Math.floor(basePay/185);
 
-let billable = Math.floor(missing / 3600);
-
-let deductionRate = Math.floor(basePay / 185);
-
-let salaryDeduction = billable * deductionRate;
-
-return basePay - salaryDeduction;
+return basePay - billableHours * deductionRate;
 }
 
 module.exports = {

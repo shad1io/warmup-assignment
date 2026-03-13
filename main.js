@@ -95,7 +95,45 @@ function metQuota(date, activeTime) {
 // ============================================================
 function addShiftRecord(textFile, shiftObj) {
     // TODO: Implement this function
+
+     let data = fs.readFileSync(textFile,"utf8").trim();
+    let rows = data.split("\n");
+
+    for(let row of rows){
+        let col = row.split(",");
+        if(col[0] === shiftObj.driverID && col[2] === shiftObj.date){
+            return {};
+        }
+    }
+
+    let duration = getShiftDuration(shiftObj.startTime, shiftObj.endTime);
+    let idle = getIdleTime(shiftObj.startTime, shiftObj.endTime);
+    let active = getActiveTime(duration, idle);
+    let quota = metQuota(shiftObj.date, active);
     
+    let newRecord = [
+        shiftObj.driverID,
+        shiftObj.driverName,
+        shiftObj.date,
+        shiftObj.startTime,
+        shiftObj.endTime,
+        duration,
+        idle,
+        active,
+        quota,
+        false
+        ].join(",");
+
+        fs.writeFileSync(textFile, data + "\n" + newRecord);
+        
+    return {
+        ...shiftObj,
+        duration,
+        idle,
+        active,
+        metQuota: quota,
+        hasBonus: false
+    };
 }
 
 // ============================================================

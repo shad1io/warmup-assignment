@@ -23,6 +23,10 @@ function secondsToTime(seconds) {
 }
 function getShiftDuration(startTime, endTime) {
     // TODO: Implement this function
+    const startSeconds = timeToSeconds(startTime);
+    const endSeconds = timeToSeconds(endTime);
+    const durationSeconds = endSeconds - startSeconds;
+    return secondsToTime(durationSeconds);
 }
 
 // ============================================================
@@ -33,6 +37,19 @@ function getShiftDuration(startTime, endTime) {
 // ============================================================
 function getIdleTime(startTime, endTime) {
     // TODO: Implement this function
+    let start = timeToSeconds(startTime);
+    let end = timeToSeconds(endTime);
+    let idle = 0;
+
+    let deliverystart = timeToSeconds("8:00:00 am");
+    let deliveryend = timeToSeconds("10:00:00 pm");
+    if(start<deliverystart){
+        idle += deliverystart - start;
+    }
+    if(end>deliveryend){
+        idle += end-deliveryend;
+    }
+    return secondsToTime(idle);
 }
 
 // ============================================================

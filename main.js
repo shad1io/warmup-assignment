@@ -170,6 +170,32 @@ function setBonus(textFile, driverID, date, newValue) {
 // ============================================================
 function countBonusPerMonth(textFile, driverID, month) {
     // TODO: Implement this function
+
+    const fs = require("fs");
+    let data = fs.readFileSync(textFile,"utf8").trim().split("\n");
+
+    let count = 0;
+    let found = false;
+
+    for(let i=1;i<data.length;i++){
+
+    let cols = data[i].split(",");
+
+    if(cols[0] === driverID){
+
+        found = true;
+
+        let m = parseInt(cols[2].split("-")[1]);
+
+        if(m === parseInt(month) && cols[9] === "true")
+            count++;
+
+    }
+
+}
+
+if(!found) return -1;
+return count;
 }
 
 // ============================================================
@@ -181,6 +207,28 @@ function countBonusPerMonth(textFile, driverID, month) {
 // ============================================================
 function getTotalActiveHoursPerMonth(textFile, driverID, month) {
     // TODO: Implement this function
+    const fs = require("fs");
+
+let rows = fs.readFileSync(textFile,"utf8").trim().split("\n");
+
+let total = 0;
+
+for(let i=1;i<rows.length;i++){
+
+    let cols = rows[i].split(",");
+
+    if(cols[0] === driverID){
+
+        let m = parseInt(cols[2].split("-")[1]);
+
+        if(m === month)
+            total += timeToSeconds(cols[7]);
+
+    }
+
+}
+
+return secondsToTime(total);
 }
 
 // ============================================================
@@ -194,6 +242,57 @@ function getTotalActiveHoursPerMonth(textFile, driverID, month) {
 // ============================================================
 function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, month) {
     // TODO: Implement this function
+    const fs = require("fs");
+
+let shifts = fs.readFileSync(textFile,"utf8").trim().split("\n");
+let rates = fs.readFileSync(rateFile,"utf8").trim().split("\n");
+
+let dayOff;
+
+for(let i=1;i<rates.length;i++){
+
+    let cols = rates[i].split(",");
+
+    if(cols[0] === driverID)
+        dayOff = cols[1];
+
+}
+
+let required = 0;
+
+for(let i=1;i<shifts.length;i++){
+
+    let cols = shifts[i].split(",");
+
+    if(cols[0] === driverID){
+
+        let date = cols[2];
+        let m = parseInt(date.split("-")[1]);
+
+        if(m === month){
+
+            let d = new Date(date).toLocaleString('en-US',{weekday:'long'});
+
+            if(d !== dayOff){
+
+                let day = parseInt(date.split("-")[2]);
+
+                if(month === 4 && day >= 10 && day <= 30)
+                    required += timeToSeconds("6:00:00");
+                else
+                    required += timeToSeconds("8:24:00");
+
+            }
+
+        }
+
+    }
+
+}
+
+required -= bonusCount * 2 * 3600;
+
+return secondsToTime(required);
 }
 
 // ============================================================
@@ -206,6 +305,43 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
 // ============================================================
 function getNetPay(driverID, actualHours, requiredHours, rateFile) {
     // TODO: Implement this function
+    const fs = require("fs");
+
+let rows = fs.readFileSync(rateFile,"utf8").trim().split("\n");
+
+let basePay;
+let tier;
+
+for(let i=1;i<rows.length;i++){
+
+    let cols = rows[i].split(",");
+
+    if(cols[0] === driverID){
+
+        basePay = parseInt(cols[2]);
+        tier = parseInt(cols[3]);
+
+    }
+
+}
+
+let missing = timeToSeconds(requiredHours) - timeToSeconds(actualHours);
+
+if(missing <= 0) return basePay;
+
+let allowance = [0,50,20,10,3][tier] * 3600;
+
+missing -= allowance;
+
+if(missing < 0) missing = 0;
+
+let billable = Math.floor(missing / 3600);
+
+let deductionRate = Math.floor(basePay / 185);
+
+let salaryDeduction = billable * deductionRate;
+
+return basePay - salaryDeduction;
 }
 
 module.exports = {
